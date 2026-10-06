@@ -1,231 +1,360 @@
 <!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- 브라우저 탭에 보이는 제목 -->
-  <title>[제품 이름] | 나만의 피지컬 AI</title>
-  <meta name="description" content="[제품 한 줄 소개]">
 
-  <!-- 글꼴: Pretendard -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
-
-  <style>
-    /* ===== 색상 설정: 이 값만 바꿔도 전체 분위기가 바뀝니다 ===== */
-    :root {
-      --bg: #F5F6F3;       /* 배경 */
-      --ink: #1E2422;      /* 기본 글자 */
-      --muted: #5E6764;    /* 보조 글자 */
-      --line: #D5D9D4;     /* 구분선 */
-      --accent: #F5C518;   /* 강조 색 */
-      --surface: #FFFFFF;  /* 이미지 영역 등 */
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      line-height: 1.7;
-      word-break: keep-all;
-    }
-
-    img { max-width: 100%; display: block; }
-    a { color: inherit; }
-    a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-
-    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
-
-    /* ----- 상단 메뉴 ----- */
-    header { border-bottom: 1px solid var(--line); }
-    .nav {
-      display: flex; justify-content: space-between; align-items: center;
-      height: 64px;
-    }
-    .logo { font-weight: 800; font-size: 1.1rem; text-decoration: none; }
-    .nav ul { display: flex; gap: 24px; list-style: none; }
-    .nav ul a { text-decoration: none; color: var(--muted); font-size: 0.95rem; }
-    .nav ul a:hover { color: var(--ink); }
-
-    /* ----- 첫 화면 ----- */
-    .hero {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
-      align-items: center; padding: 88px 0;
-    }
-    .hero h1 {
-      font-size: clamp(2.6rem, 6vw, 4.2rem);
-      font-weight: 800; line-height: 1.1; letter-spacing: -0.03em;
-    }
-    .hero .tagline { margin-top: 20px; font-size: 1.2rem; color: var(--muted); max-width: 30em; }
-    .button {
-      display: inline-block; margin-top: 32px; padding: 14px 26px;
-      background: var(--ink); color: var(--bg);
-      text-decoration: none; font-weight: 600; border-radius: 999px;
-    }
-    .button:hover { background: #000; }
-
-    /* 제품 이미지 자리: 이미지를 넣으면 회색 안내 문구 대신 사진이 보입니다 */
-    .product-shot {
-      background: var(--accent);
-      border-radius: 24px;
-      padding: 28px;
-    }
-    .product-shot .frame {
-      aspect-ratio: 4 / 3;
-      background: var(--surface);
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--muted); text-align: center; overflow: hidden;
-    }
-    .product-shot .frame img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* ----- 공통 섹션 ----- */
-    section.block { padding: 80px 0; border-top: 1px solid var(--line); }
-    section.block h2 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 16px; }
-    section.block .lead { color: var(--muted); max-width: 36em; font-size: 1.05rem; }
-
-    /* ----- 작동 방식: 감지 → 판단 → 행동 ----- */
-    .flow {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
-      margin-top: 40px; list-style: none; counter-reset: step;
-    }
-    .flow li {
-      padding: 0 28px 0 0; position: relative; counter-increment: step;
-    }
-    .flow li::before {
-      content: counter(step);
-      display: flex; align-items: center; justify-content: center;
-      width: 40px; height: 40px; margin-bottom: 18px;
-      border-radius: 50%; background: var(--accent);
-      font-weight: 800;
-    }
-    /* 단계 사이 연결선 */
-    .flow li:not(:last-child)::after {
-      content: ""; position: absolute; top: 20px; left: 52px; right: 12px;
-      height: 2px; background: var(--line);
-    }
-    .flow h3 { font-size: 1.2rem; margin-bottom: 6px; }
-    .flow p { color: var(--muted); }
-
-    /* ----- 주요 기능 ----- */
-    .features { margin-top: 40px; list-style: none; }
-    .features li {
-      display: grid; grid-template-columns: 220px 1fr; gap: 24px;
-      padding: 24px 0; border-bottom: 1px solid var(--line);
-    }
-    .features li:first-child { border-top: 1px solid var(--line); }
-    .features h3 { font-size: 1.15rem; }
-    .features p { color: var(--muted); }
-
-    /* ----- 만든 사람 / 하단 ----- */
-    footer { border-top: 1px solid var(--line); padding: 40px 0 56px; color: var(--muted); font-size: 0.95rem; }
-    footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-
-    /* ----- 모바일 화면 ----- */
-    @media (max-width: 760px) {
-      .nav ul { display: none; }
-      .hero { grid-template-columns: 1fr; padding: 56px 0; gap: 36px; }
-      .flow { grid-template-columns: 1fr; gap: 32px; }
-      .flow li::after { display: none; }
-      .features li { grid-template-columns: 1fr; gap: 4px; }
-      section.block { padding: 56px 0; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- ===== 상단 메뉴 ===== -->
-  <header>
-    <nav class="wrap nav">
-      <a class="logo" href="#">[제품 이름]</a>
-      <ul>
-        <li><a href="#problem">문제</a></li>
-        <li><a href="#how">작동 방식</a></li>
-        <li><a href="#features">기능</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <main>
-    <!-- ===== 첫 화면: 제품 이름과 한 줄 소개 ===== -->
-    <div class="wrap hero">
-      <div>
-        <h1>[제품 이름]</h1>
-        <p class="tagline">[제품을 한 문장으로 소개해 주세요. 누구에게 어떤 도움을 주는지 쓰면 좋습니다.]</p>
-        <a class="button" href="#how">작동 방식 보기</a>
-      </div>
-
-      <div class="product-shot">
-        <div class="frame">
-          <!-- 이미지를 넣으려면 아래 문구를 지우고 이렇게 바꾸세요:
-               <img src="images/product.png" alt="제품 사진 설명"> -->
-          <span>제품 이미지 자리<br>images 폴더에 사진을 넣어 주세요</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== 해결하려는 문제 ===== -->
-    <section class="block" id="problem">
-      <div class="wrap">
-        <h2>[어떤 문제를 해결하나요?]</h2>
-        <p class="lead">[사용자가 겪는 불편이나 문제를 2~3문장으로 설명해 주세요. 내 제품이 왜 필요한지가 드러나면 좋습니다.]</p>
-      </div>
-    </section>
-
-    <!-- ===== 작동 방식: 피지컬 AI의 감지 → 판단 → 행동 ===== -->
-    <section class="block" id="how">
-      <div class="wrap">
-        <h2>이렇게 작동합니다</h2>
-        <p class="lead">[제품이 현실 세계에서 어떻게 움직이는지 간단히 소개해 주세요.]</p>
-
-        <ol class="flow">
-          <li>
-            <h3>감지</h3>
-            <p>[어떤 센서로 무엇을 알아차리나요?]</p>
-          </li>
-          <li>
-            <h3>판단</h3>
-            <p>[AI가 어떤 정보를 보고 무엇을 결정하나요?]</p>
-          </li>
-          <li>
-            <h3>행동</h3>
-            <p>[결정에 따라 어떻게 움직이거나 반응하나요?]</p>
-          </li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- ===== 주요 기능: 항목을 복사해서 늘리거나 지워도 됩니다 ===== -->
-    <section class="block" id="features">
-      <div class="wrap">
-        <h2>주요 기능</h2>
-
-        <ul class="features">
-          <li>
-            <h3>[기능 1]</h3>
-            <p>[기능 설명]</p>
-          </li>
-          <li>
-            <h3>[기능 2]</h3>
-            <p>[기능 설명]</p>
-          </li>
-          <li>
-            <h3>[기능 3]</h3>
-            <p>[기능 설명]</p>
-          </li>
-        </ul>
-      </div>
-    </section>
-  </main>
-
-  <!-- ===== 하단: 만든 사람 정보 ===== -->
-  <footer>
-    <div class="wrap">
-      <span>만든 사람: [이름]</span>
-      <span>나만의 피지컬 AI 제품 기획 과제</span>
-    </div>
-  </footer>
-
-</body>
-</html>
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#8b7169", "error": "#ba1a1a", "on-primary-fixed": "#390c00", "tertiary-fixed": "#69f9e7", "error-container": "#ffdad6", "primary": "#a13a0f", "tertiary-fixed-dim": "#46dccb", "on-error": "#ffffff", "surface": "#fef8f5", "on-tertiary": "#ffffff", "secondary-fixed": "#d6e8cb", "inverse-surface": "#32302e", "primary-fixed-dim": "#ffb59c", "surface-container": "#f3ede9", "secondary-container": "#d6e8cb", "secondary-fixed-dim": "#baccb0", "on-tertiary-fixed": "#00201c", "on-primary-fixed-variant": "#822700", "tertiary": "#00685e", "surface-dim": "#ded9d5", "primary-fixed": "#ffdbcf", "on-error-container": "#93000a", "surface-tint": "#a53c12", "secondary": "#53634c", "inverse-on-surface": "#f5f0ec", "on-tertiary-container": "#f4fffc", "surface-variant": "#e7e1de", "on-surface-variant": "#57423b", "inverse-primary": "#ffb59c", "on-secondary": "#ffffff", "outline-variant": "#dec0b6", "on-secondary-fixed-variant": "#3c4b36", "on-primary-container": "#fffbff", "on-secondary-fixed": "#111f0d", "surface-container-high": "#ede7e4", "on-surface": "#1d1b19", "surface-bright": "#fef8f5", "tertiary-container": "#008378", "background": "#fef8f5", "on-secondary-container": "#596952", "on-tertiary-fixed-variant": "#005049", "on-background": "#1d1b19", "primary-container": "#c25127", "on-primary": "#ffffff", "surface-container-lowest": "#ffffff", "surface-container-highest": "#e7e1de", "surface-container-low": "#f8f2ef" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2.5rem", "gutter": "1rem", "margin-desktop": "3rem", "space-lg": "1.5rem", "margin-tablet": "2rem", "space-md": "1rem", "gutter-desktop": "2rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter-tablet": "1.5rem", "margin": "1.25rem" }, "fontFamily": { "display-lg-mobile": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "headline-xl-mobile": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-xl": ["Plus Jakarta Sans"] }, "fontSize": { "display-lg-mobile": ["36px", { "lineHeight": "44px", "fontWeight": "700" }], "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "500" }], "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "600" }], "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-xl-mobile": ["26px", { "lineHeight": "34px", "fontWeight": "700" }], "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }], "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }], "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "display-lg": ["48px", { "lineHeight": "56px", "fontWeight": "700" }], "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "headline-xl": ["32px", { "lineHeight": "40px", "fontWeight": "700" }] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;min-height:100vh;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style></head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col antialiased selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe"><div class="h-16 px-gutter flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="Hands-Free Cooking Assistant Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdqQrMkaxddhpmI9LpFdYoAf-jd_jyKNNZjeoVNfoKeZE5IO7JF-hTEKsYKXIpDdqCak3MTvhOmSBc-fA8n4YXhGimklZc1HRO6etn1YkpNgeOZMnGuYzyV9edsOwvlHU_oEtEG8NjPxj2psEW0eboLSy34Tsv2Uz3zwuPZ6RHhGai0QYtxxSFb5-8fDnotJZInUTdynn17xj4xQ2A8DTpxD_IfJ7StsRQuByb1gU"/><div class="flex flex-col"><span class="font-label-md text-label-md text-primary tracking-wide uppercase">Aura Chef</span><span class="font-headline-sm text-headline-sm text-on-surface leading-none">Product Overview</span></div></div><div class="flex items-center gap-space-sm"><a class="hidden sm:inline-flex items-center justify-center px-space-md py-space-xs rounded-full bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors" data-path="pre-order-reservation" href="#">예약하기</a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-28 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- 1. Hero Section -->
+<section class="flex flex-col px-gutter pt-space-md pb-space-lg gap-space-md">
+<div class="inline-flex items-center gap-space-xs self-start px-space-md py-1.5 rounded-full bg-secondary-container text-on-secondary-container">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm tracking-wide uppercase">Physical AI Kitchen Companion</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<h1 class="font-headline-xl-mobile text-headline-xl-mobile text-on-surface tracking-tight leading-tight">
+        손대지 않고,<br/>
+<span class="text-primary font-bold">요리에 집중하세요.</span>
+</h1>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+        밀가루 반죽이 묻은 손도, 기름진 손도 괜찮습니다. 초소형 비전 AI가 요리의 흐름을 깨지 않고 레시피를 넘겨줍니다.
+      </p>
+</div>
+<!-- Hero Image Card with Spatial Ambient Lighting -->
+<div class="relative w-full rounded-xl overflow-hidden shadow-md bg-surface-container-high">
+<img alt="Aura Chef Physical AI Device on warm kitchen counter" class="w-full h-72 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBl0AjHfKvOC3cZByzXsYL5A3fwTKuEWtZZklFbGeSxSOn97XyCy6DAU-FAUkQ2cWi6VLykJ9tJfPnWhiN5f6OXFwMzUZHUABtM3GUiZcimEWjHo-TjUyLlVa9L4n4QyQUbJcQC82mfSn7e_4qmfVR2GF32E9YFenzYNg5REvbDpfT61LcEiY5FX7bC1UFosg-hx63ol9r2wAltgNbqHVk4LzoMv2lVeWGgNzOLags"/>
+<!-- Ambient Glow Badge & Status -->
+<div class="absolute top-3 left-3 flex items-center gap-space-xs px-3 py-1.5 rounded-full bg-surface/90 backdrop-blur-md shadow-sm">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim ring-4 ring-tertiary/20"></span>
+<span class="font-label-sm text-label-sm text-on-surface font-medium">AI 비전 센서 활성화 중</span>
+</div>
+<div class="absolute bottom-3 inset-x-3 p-3 rounded-lg bg-surface/90 backdrop-blur-md flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">waves</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">1.5m 원거리 인식</span>
+<span class="font-label-sm text-[10px] text-on-surface-variant leading-none">주방 어느 위치에서든 반응</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Ready</span>
+</div>
+</div>
+<!-- CTA Stack -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<button class="w-full h-14 flex items-center justify-center gap-space-xs rounded-full bg-primary text-on-primary font-label-lg text-label-lg shadow-md active:scale-[0.99] transition-all">
+<span class="material-symbols-outlined text-[20px]">pan_tool</span>
+<span>제품 체험해보기</span>
+</button>
+<button class="w-full h-12 flex items-center justify-center gap-space-xs rounded-full bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px] text-secondary">play_circle</span>
+<span>주방 실사용 영상 보기 (45초)</span>
+</button>
+</div>
+</section>
+<!-- 2. Problem Section (공감 및 문제 정의) -->
+<section class="flex flex-col px-gutter py-space-lg bg-surface-container-low gap-space-md">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Kitchen Friction</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-snug">
+        요리 중 가장 번거로운 순간,<br/>결국 화면 터치였습니다.
+      </h2>
+</div>
+<!-- Pain points list -->
+<div class="flex flex-col gap-space-sm">
+<div class="p-space-md rounded-xl bg-surface shadow-sm flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
+<span class="font-headline-sm text-headline-sm">🥐</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">묻어나는 밀가루와 양념</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">반죽을 치대다 다음 조리법을 보려고 화면을 켤 때마다 액정에 묻는 얼룩들.</p>
+</div>
+</div>
+<div class="p-space-md rounded-xl bg-surface shadow-sm flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
+<span class="font-headline-sm text-headline-sm">🍳</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">멈춰버리는 요리의 템포</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">타이머를 맞추거나 불 조절 타이밍을 보느라 손을 씻고 닦는 불필요한 번거로움.</p>
+</div>
+</div>
+<div class="p-space-md rounded-xl bg-surface shadow-sm flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
+<span class="font-headline-sm text-headline-sm">📱</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">식재료와 기기의 위생 불안</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">스마트폰에 번식하는 세균이 식재료를 만지는 손으로 옮겨가는 주방 위생의 사각지대.</p>
+</div>
+</div>
+</div>
+<!-- Visual with Dough Hand & Empathy Callout -->
+<div class="relative rounded-xl overflow-hidden shadow-sm mt-2">
+<img alt="Baking with flour-covered hands gesturing to smart device" class="w-full h-64 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqLA-PzE-vXA4VwsA6HQVv7TI1HhO-Sd1jLo0F2WqANI9dXZrQuCWuTgB-bDwYGQwZfjv-tiF8wh_thk8CH5Y52uX4WRcoGKm3FbVYEOGbOiUdgsBo1n-NdCBuQRTR5ojqMPsguFFDc6OFIkaivijyDFOoPAuXgLKpORs4PFw11DgPkeubgiDJKjhhqQ5OuCwaXYKvWUocXfhBSMx08VOinsLIh7mVVB5qivh_U5I"/>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/90 via-inverse-surface/40 to-transparent flex flex-col justify-end p-space-md">
+<span class="font-label-sm text-label-sm text-tertiary-fixed font-semibold mb-1">인사이트</span>
+<p class="font-headline-sm text-headline-sm text-on-error leading-snug">
+          "주방에서는 화면을 만지는 대신,<br/>흐름을 끊지 않는 새로운 대화법이 필요합니다."
+        </p>
+</div>
+</div>
+</section>
+<!-- 3. Product Showcase Section (제품 하드웨어) -->
+<section class="flex flex-col px-gutter py-space-lg gap-space-md">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Aesthetic &amp; Intelligent</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-snug">
+        주방을 위해 설계된 첫 번째 Physical AI
+      </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        어느 주방에나 은은하게 어우러지는 미니멀 세라믹 텍스처와 비침습적 공간 지능 기술.
+      </p>
+</div>
+<!-- Feature Bento Blocks -->
+<div class="flex flex-col gap-space-sm">
+<div class="p-space-md rounded-xl bg-surface-container flex flex-col gap-2 shadow-sm">
+<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">visibility</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">초광각 3D 제스처 센서 &amp; 360° 마이크</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          물 끓는 소리와 환풍기 소음 속에서도 사용자의 음성과 손끝 궤적만을 정확히 선별하여 수신합니다.
+        </p>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container flex flex-col gap-2 shadow-sm">
+<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[24px]">lock</span>
+</div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">100% 온디바이스 AI 프라이버시</h3>
+<span class="px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold">안심 보안</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          주방 영상 데이터는 외부 서버로 전송되지 않으며, 기기 내부 전용 칩셋에서 즉각 연산 후 즉시 파기됩니다.
+        </p>
+</div>
+<div class="p-space-md rounded-xl bg-surface-container flex flex-col gap-2 shadow-sm">
+<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[24px]">light_mode</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">앰비언트 라이트 링 &amp; 차분한 음성 피드백</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          자극적인 스크린 대신 은은한 빛의 숨결과 따뜻한 톤의 셰프 보이스로 조리 진행 상황을 알려줍니다.
+        </p>
+</div>
+</div>
+</section>
+<!-- 4. Gesture Guide Section (핵심 손동작 안내) -->
+<section class="flex flex-col px-gutter py-space-lg bg-surface-container-low gap-space-md">
+<div class="flex flex-col gap-1">
+<div class="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[16px]">touch_app</span>
+<span>직관적 3대 제스처</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">
+        주방에서 가장 자연스러운 3가지 손짓
+      </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        복잡한 명령어 학습 없이, 직관적인 제스처 하나로 조리 순서를 자유자재로 넘깁니다.
+      </p>
+</div>
+<!-- Gesture Cards -->
+<div class="flex flex-col gap-space-md">
+<!-- Gesture 1: Open Palm -->
+<div class="p-space-md rounded-xl bg-surface shadow-sm flex flex-col gap-space-sm relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-28 h-28 bg-primary/5 rounded-full pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-2xl shadow-inner">
+              👋
+            </div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-primary font-bold">NEXT STEP</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">손바닥 보이기 (Open Palm)</h3>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary text-[28px]">arrow_forward</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          센서를 향해 손바닥을 펼치면 <strong class="text-on-surface font-semibold">"다음 단계 및 조리 시간 안내"</strong>로 부드럽게 넘어갑니다.
+        </p>
+<div class="flex items-center gap-2 p-2.5 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[18px] text-tertiary">volume_up</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">"3단계: 올리브유를 두르고 마늘을 2분간 볶아주세요."</span>
+</div>
+</div>
+<!-- Gesture 2: Closed Fist -->
+<div class="p-space-md rounded-xl bg-surface shadow-sm flex flex-col gap-space-sm relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-28 h-28 bg-secondary/5 rounded-full pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-2xl shadow-inner">
+              ✊
+            </div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-secondary font-bold">PREVIOUS STEP</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">주먹 쥐기 (Closed Fist)</h3>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary text-[28px]">arrow_back</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          놓친 소스 비율이나 계량이 궁금할 땐 주먹을 살포시 쥐어 <strong class="text-on-surface font-semibold">"이전 단계로 되돌리기"</strong>를 실행합니다.
+        </p>
+<div class="flex items-center gap-2 p-2.5 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[18px] text-secondary">history</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">"2단계: 진간장 2큰술, 맛술 1큰술 계량 단계로 이동합니다."</span>
+</div>
+</div>
+<!-- Gesture 3: Pointing Finger -->
+<div class="p-space-md rounded-xl bg-surface shadow-sm flex flex-col gap-space-sm relative overflow-hidden">
+<div class="absolute -right-4 -bottom-4 w-28 h-28 bg-tertiary/5 rounded-full pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center text-2xl shadow-inner">
+              ☝️
+            </div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-tertiary font-bold">REPLAY &amp; TIMER</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">검지 세우기 (Pointing)</h3>
+</div>
+</div>
+<span class="material-symbols-outlined text-tertiary text-[28px]">replay</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          검지 손가락을 세우면 <strong class="text-on-surface font-semibold">"현재 단계 다시 읽기"</strong>와 남아있는 타이머 시간을 음성으로 즉시 확인합니다.
+        </p>
+<div class="flex items-center gap-2 p-2.5 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-[18px] text-primary">timer</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">"현재 타이머는 1분 32초 남았습니다."</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. How It Works (원리 소개) -->
+<section class="flex flex-col px-gutter py-space-lg gap-space-md">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Kitchen-Trained AI</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-snug">
+        어떻게 묻은 손으로도<br/>정확하게 손짓을 읽어낼까요?
+      </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        일반 카메라와 다르게, 주방의 거친 작업 환경에 특화 훈련된 비전 알고리즘이 탑재되었습니다.
+      </p>
+</div>
+<!-- Process Timeline -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex gap-space-sm p-space-md rounded-xl bg-surface-container-high shadow-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary shrink-0">01</span>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">3D 핸드 랜드마크 적응 추적</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+            반죽 가루, 식용유, 수분이 손에 묻어 형태가 불분명해져도 관절 좌표계를 추론하여 99.4%의 동작 정확도를 보장합니다.
+          </p>
+</div>
+</div>
+<div class="flex gap-space-sm p-space-md rounded-xl bg-surface-container-high shadow-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary shrink-0">02</span>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">조리 맥락 기반 오작동 필터링</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+            칼질을 하거나 냄비를 젓는 일상적 요리 모션을 제스처로 착각하지 않도록 레시피 조리 단계 컨텍스트를 동기화합니다.
+          </p>
+</div>
+</div>
+<div class="flex gap-space-sm p-space-md rounded-xl bg-surface-container-high shadow-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary shrink-0">03</span>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">실시간 햅틱 오디오 &amp; LED 신호</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+            명확하고 따스한 오디오 차임벨과 상단 LED 링의 빛 이동을 통해 화면을 굳이 쳐다보지 않아도 동작 완료를 인지합니다.
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- 6. Vision of the Future (미래 로드맵 & 사전예약) -->
+<section class="flex flex-col px-gutter py-space-lg bg-surface-container gap-space-md">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-tertiary uppercase font-bold tracking-wider">The Future of Cooking</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-snug">
+        단순한 레시피 뷰어를 넘어,<br/>나만의 AI 수셰프로
+      </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        지속적인 무선 소프트웨어 업데이트를 통해 진화하는 조리 비서의 다음 기능들입니다.
+      </p>
+</div>
+<!-- Future Feature Pills -->
+<div class="grid grid-cols-1 gap-space-xs">
+<div class="flex items-center gap-space-sm p-space-md rounded-xl bg-surface shadow-sm">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">skillet</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">식재료 굽기 상태 비전 분석</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">"스테이크 미디엄 레어 도달까지 40초 남았습니다."</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm p-space-md rounded-xl bg-surface shadow-sm">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-secondary shrink-0">
+<span class="material-symbols-outlined text-[20px]">scale</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">무저울 카메라 부피 측정 보조</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">도마 위 식재료 컷팅 크기와 분량을 카메라로 측정</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm p-space-md rounded-xl bg-surface shadow-sm">
+<div class="w-10 h-10 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary shrink-0">
+<span class="material-symbols-outlined text-[20px]">swap_horiz</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">실시간 맞춤형 대체 재료 제안</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">버터가 없을 때 식물성 오일 및 두유 배합 추천</span>
+</div>
+</div>
+</div>
+<!-- Earlybird Waitlist Card -->
+<div class="mt-space-sm p-space-lg rounded-2xl bg-surface shadow-md flex flex-col gap-space-md">
+<div class="flex flex-col gap-1">
+<div class="inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm font-bold">
+<span>얼리버드 40% 한정 혜택</span>
+</div>
+<h3 class="font-headline-lg text-headline-lg text-on-surface">런칭 알림 신청하기</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          공식 출시 시 가장 먼저 알림과 함께 얼리버드 전용 할인 코드를 보내드립니다.
+        </p>
+</div>
+<form class="flex flex-col gap-space-xs" onsubmit="event.preventDefault(); document.getElementById('reservation-feedback').classList.remove('hidden');">
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant">휴대폰 번호 또는 이메일</label>
+<div class="flex items-center px-4 h-13 rounded-xl bg-surface-container-high focus-within:ring-2 focus-within:ring-primary">
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant mr-2">mail</span>
+<input class="w-full bg-transparent border-0 outline-none text-on-surface font-body-sm placeholder:text-outline text-body-sm py-3" placeholder="010-0000-0000 또는 email@domain.com" required="" type="text"/>
+</div>
+</div>
+<button class="mt-2 w-full h-13 flex items-center justify-center gap-space-xs rounded-xl bg-primary text-on-primary font-label-lg text-label-lg shadow-sm active:scale-[0.98] transition-transform" type="submit">
+<span class="material-symbols-outlined text-[20px]">notifications_active</span>
+<span>사전 예약 알림 신청</span>
+</button>
+<p class="hidden text-center font-label-sm text-label-sm text-primary font-semibold mt-2 animate-bounce" id="reservation-feedback">
+          🎉 사전 예약 알림 등록이 완료되었습니다!
+        </p>
+<span class="text-center font-label-sm text-[11px] text-outline mt-1">
+          스팸성 광고 없이 정식 출시 안내 목적으로만 사용됩니다.
+        </span>
+</form>
+</div>
+</section>
+<!-- Bottom Brand Note -->
+<footer class="flex flex-col items-center justify-center px-gutter py-space-lg text-center gap-2">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="font-label-md text-label-md font-bold tracking-widest uppercase">Aura Chef</span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="font-label-sm text-label-sm">Physical AI Companion</span>
+</div>
+<p class="font-label-sm text-label-sm text-outline">
+      주방의 온기와 디지털의 편리함이 만나는 순간
+    </p>
+</footer>
+</div></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_-2px_16px_rgba(78,59,42,0.06)]" data-active-classes="text-primary font-label-lg"><div class="px-gutter pt-space-xs pb-space-xs flex flex-col gap-space-xs"><div class="flex items-center gap-space-sm"><a class="flex-1 h-12 flex items-center justify-center gap-space-xs bg-primary text-on-primary rounded-full font-label-lg text-label-lg shadow-md hover:bg-primary-container transition-all active:scale-[0.99]" data-path="pre-order-reservation" href="#"><span class="material-symbols-outlined text-[20px]">notifications_active</span><span>사전 예약 알림받기</span></a></div><div class="flex justify-around items-center h-12"><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] transition-colors text-primary font-label-lg" data-path="product-overview" href="#"><span class="material-symbols-outlined text-[22px]">soup_kitchen</span><span class="font-label-sm text-label-sm">제품소개</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="gesture-features" href="#"><span class="material-symbols-outlined text-[22px]">sign_language</span><span class="font-label-sm text-label-sm">제스처</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="hardware-specs" href="#"><span class="material-symbols-outlined text-[22px]">kitchen</span><span class="font-label-sm text-label-sm">스펙</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant hover:text-on-surface transition-colors" data-path="culinary-recipes" href="#"><span class="material-symbols-outlined text-[22px]">menu_book</span><span class="font-label-sm text-label-sm">레시피</span></a></div></div></nav></body></html>
