@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- 브라우저 탭에 보이는 제목 -->
+  <title>[제품 이름] | 나만의 피지컬 AI</title>
+  <meta name="description" content="[제품 한 줄 소개]">
+
+  <!-- 글꼴: Pretendard -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+
+  <style>
+    /* ===== 색상 설정: 이 값만 바꿔도 전체 분위기가 바뀝니다 ===== */
+    :root {
+      --bg: #F5F6F3;       /* 배경 */
+      --ink: #1E2422;      /* 기본 글자 */
+      --muted: #5E6764;    /* 보조 글자 */
+      --line: #D5D9D4;     /* 구분선 */
+      --accent: #F5C518;   /* 강조 색 */
+      --surface: #FFFFFF;  /* 이미지 영역 등 */
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.7;
+      word-break: keep-all;
+    }
+
+    img { max-width: 100%; display: block; }
+    a { color: inherit; }
+    a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+    /* ----- 상단 메뉴 ----- */
+    header { border-bottom: 1px solid var(--line); }
+    .nav {
+      display: flex; justify-content: space-between; align-items: center;
+      height: 64px;
+    }
+    .logo { font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+    .nav ul { display: flex; gap: 24px; list-style: none; }
+    .nav ul a { text-decoration: none; color: var(--muted); font-size: 0.95rem; }
+    .nav ul a:hover { color: var(--ink); }
+
+    /* ----- 첫 화면 ----- */
+    .hero {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+      align-items: center; padding: 88px 0;
+    }
+    .hero h1 {
+      font-size: clamp(2.6rem, 6vw, 4.2rem);
+      font-weight: 800; line-height: 1.1; letter-spacing: -0.03em;
+    }
+    .hero .tagline { margin-top: 20px; font-size: 1.2rem; color: var(--muted); max-width: 30em; }
+    .button {
+      display: inline-block; margin-top: 32px; padding: 14px 26px;
+      background: var(--ink); color: var(--bg);
+      text-decoration: none; font-weight: 600; border-radius: 999px;
+    }
+    .button:hover { background: #000; }
+
+    /* 제품 이미지 자리: 이미지를 넣으면 회색 안내 문구 대신 사진이 보입니다 */
+    .product-shot {
+      background: var(--accent);
+      border-radius: 24px;
+      padding: 28px;
+    }
+    .product-shot .frame {
+      aspect-ratio: 4 / 3;
+      background: var(--surface);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); text-align: center; overflow: hidden;
+    }
+    .product-shot .frame img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ----- 공통 섹션 ----- */
+    section.block { padding: 80px 0; border-top: 1px solid var(--line); }
+    section.block h2 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 16px; }
+    section.block .lead { color: var(--muted); max-width: 36em; font-size: 1.05rem; }
+
+    /* ----- 작동 방식: 감지 → 판단 → 행동 ----- */
+    .flow {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+      margin-top: 40px; list-style: none; counter-reset: step;
+    }
+    .flow li {
+      padding: 0 28px 0 0; position: relative; counter-increment: step;
+    }
+    .flow li::before {
+      content: counter(step);
+      display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; margin-bottom: 18px;
+      border-radius: 50%; background: var(--accent);
+      font-weight: 800;
+    }
+    /* 단계 사이 연결선 */
+    .flow li:not(:last-child)::after {
+      content: ""; position: absolute; top: 20px; left: 52px; right: 12px;
+      height: 2px; background: var(--line);
+    }
+    .flow h3 { font-size: 1.2rem; margin-bottom: 6px; }
+    .flow p { color: var(--muted); }
+
+    /* ----- 주요 기능 ----- */
+    .features { margin-top: 40px; list-style: none; }
+    .features li {
+      display: grid; grid-template-columns: 220px 1fr; gap: 24px;
+      padding: 24px 0; border-bottom: 1px solid var(--line);
+    }
+    .features li:first-child { border-top: 1px solid var(--line); }
+    .features h3 { font-size: 1.15rem; }
+    .features p { color: var(--muted); }
+
+    /* ----- 만든 사람 / 하단 ----- */
+    footer { border-top: 1px solid var(--line); padding: 40px 0 56px; color: var(--muted); font-size: 0.95rem; }
+    footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+    /* ----- 모바일 화면 ----- */
+    @media (max-width: 760px) {
+      .nav ul { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 56px 0; gap: 36px; }
+      .flow { grid-template-columns: 1fr; gap: 32px; }
+      .flow li::after { display: none; }
+      .features li { grid-template-columns: 1fr; gap: 4px; }
+      section.block { padding: 56px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== 상단 메뉴 ===== -->
+  <header>
+    <nav class="wrap nav">
+      <a class="logo" href="#">[제품 이름]</a>
+      <ul>
+        <li><a href="#problem">문제</a></li>
+        <li><a href="#how">작동 방식</a></li>
+        <li><a href="#features">기능</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ===== 첫 화면: 제품 이름과 한 줄 소개 ===== -->
+    <div class="wrap hero">
+      <div>
+        <h1>[제품 이름]</h1>
+        <p class="tagline">[제품을 한 문장으로 소개해 주세요. 누구에게 어떤 도움을 주는지 쓰면 좋습니다.]</p>
+        <a class="button" href="#how">작동 방식 보기</a>
+      </div>
+
+      <div class="product-shot">
+        <div class="frame">
+          <!-- 이미지를 넣으려면 아래 문구를 지우고 이렇게 바꾸세요:
+               <img src="images/product.png" alt="제품 사진 설명"> -->
+          <span>제품 이미지 자리<br>images 폴더에 사진을 넣어 주세요</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 해결하려는 문제 ===== -->
+    <section class="block" id="problem">
+      <div class="wrap">
+        <h2>[어떤 문제를 해결하나요?]</h2>
+        <p class="lead">[사용자가 겪는 불편이나 문제를 2~3문장으로 설명해 주세요. 내 제품이 왜 필요한지가 드러나면 좋습니다.]</p>
+      </div>
+    </section>
+
+    <!-- ===== 작동 방식: 피지컬 AI의 감지 → 판단 → 행동 ===== -->
+    <section class="block" id="how">
+      <div class="wrap">
+        <h2>이렇게 작동합니다</h2>
+        <p class="lead">[제품이 현실 세계에서 어떻게 움직이는지 간단히 소개해 주세요.]</p>
+
+        <ol class="flow">
+          <li>
+            <h3>감지</h3>
+            <p>[어떤 센서로 무엇을 알아차리나요?]</p>
+          </li>
+          <li>
+            <h3>판단</h3>
+            <p>[AI가 어떤 정보를 보고 무엇을 결정하나요?]</p>
+          </li>
+          <li>
+            <h3>행동</h3>
+            <p>[결정에 따라 어떻게 움직이거나 반응하나요?]</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== 주요 기능: 항목을 복사해서 늘리거나 지워도 됩니다 ===== -->
+    <section class="block" id="features">
+      <div class="wrap">
+        <h2>주요 기능</h2>
+
+        <ul class="features">
+          <li>
+            <h3>[기능 1]</h3>
+            <p>[기능 설명]</p>
+          </li>
+          <li>
+            <h3>[기능 2]</h3>
+            <p>[기능 설명]</p>
+          </li>
+          <li>
+            <h3>[기능 3]</h3>
+            <p>[기능 설명]</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== 하단: 만든 사람 정보 ===== -->
+  <footer>
+    <div class="wrap">
+      <span>만든 사람: [이름]</span>
+      <span>나만의 피지컬 AI 제품 기획 과제</span>
+    </div>
+  </footer>
+
+</body>
+</html>
