@@ -27,8 +27,8 @@ HarvestEdge — OpenCV 전처리 및 수확 적기 판단 파이프라인
   현장 조사와 대표 이미지(9장) 분석 후 대상 작물에 맞게 반드시 보정해야 한다.
 
 사용 예:
-    python src/preprocess.py fruit.jpg
-    python src/preprocess.py frame.jpg --bbox 120,80,90,90 --debug out.png
+    python code/preprocess.py fruit.jpg
+    python code/preprocess.py frame.jpg --bbox 120,80,90,90 --debug out.png
 """
 
 from __future__ import annotations
