@@ -1,43 +1,106 @@
-# 나만의 피지컬 AI 제품 만들기
+# 데이터 수집 및 전처리 과정
 
-이 폴더는 과제 제출용 작업 폴더입니다.
-나만의 피지컬 AI 제품을 기획하고, 그 제품을 소개하는 홈페이지를 만들어 GitHub Pages로 배포합니다.
+## 1. 데이터 수집
 
-## 폴더 구성
+본 프로젝트에서는 과일의 수확 적기를 판단하기 위해 과일 이미지를 수집한다.
 
-```
-physicalAI/
-├── README.md          ← 지금 보고 있는 안내 문서
-├── index.html         ← 제품 소개 홈페이지 (GitHub Pages 시작 파일)
-├── images/            ← 홈페이지에 쓸 이미지 (제품 사진, 스케치 등)
-├── PRD/
-│   └── PRD.md         ← 제품 요구사항 문서 (무엇을, 왜, 어떻게 만들지)
-└── report/
-    └── report.md      ← 과제 보고서 (과정, 회고, 배운 점)
-```
+수집 데이터는 다음과 같은 환경을 포함하도록 구성한다.
 
-## GitHub Pages 배포 방법
+- 미숙 과일
+- 수확 적기 과일
+- 과숙 과일
+- 잎이나 가지에 가려진 과일
+- 여러 과일이 겹쳐 있는 경우
+- 다양한 촬영 거리와 각도
+- 직사광선 및 그림자 환경
+- 다양한 밝기 환경
+- 복잡한 배경 환경
 
-cd 
-git init
-git add .
-git commit -m "처음 커밋"
+## 2. 전처리 목적
 
-git remote remove origin
+본 시스템은 야외 환경에서 카메라를 이용하기 때문에 촬영 시간, 날씨, 조명, 그림자 등에 따라 이미지의 밝기와 색상이 달라질 수 있다.
 
-git remote add origin https://github.com/maraoj1004-collab/physical-ai
+또한 과일 주변에 잎, 가지, 토양 등의 배경이 존재하기 때문에 전체 이미지의 색상 정보를 그대로 사용하는 경우 수확 적기 판단에 영향을 줄 수 있다.
 
+따라서 과일 객체를 먼저 탐지하고 해당 영역을 Crop한 후 색상 및 크기 특징을 분석하는 전처리 과정을 구성한다.
 
-git branch -M main
-git push -u origin main --force
+## 3. 전처리 Pipeline
 
+Camera Image
+↓
+Image Quality Check
+↓
+Resize / Letterbox
+↓
+YOLO Fruit Detection
+↓
+Fruit Crop
+↓
+Color Preprocessing
+↓
+HSV / Lab Color Analysis
+↓
+Size / Shape Feature Extraction
+↓
+Harvest Readiness Decision
 
----
+## 4. 이미지 품질 확인
 
-git init
-git branch -M main
-git remote remove origin
-git remote add origin 
-git add .
-git commit -m "수정 내용에 대한 설명"
-git push -u origin main --force
+촬영된 이미지에서 다음과 같은 품질 문제를 확인한다.
+
+- Blur
+- 과다 노출
+- 저노출
+- 노이즈
+- 초점 불량
+
+품질이 지나치게 낮은 이미지는 학습 및 분석에 적합하지 않은 데이터로 분류한다.
+
+## 5. Resize / Letterbox
+
+YOLO 모델의 입력 크기에 맞추기 위해 이미지를 Resize한다.
+
+이미지의 가로세로 비율을 유지하면서 Letterbox 방식을 적용하여 과일의 형태가 과도하게 변형되는 것을 방지한다.
+
+## 6. YOLO 과일 탐지
+
+전처리된 이미지를 YOLO 모델에 입력하여 영상 속 과일의 위치를 탐지한다.
+
+각 과일에 대해 Bounding Box를 생성하고 탐지된 영역을 이후 분석에 사용한다.
+
+## 7. Fruit Crop
+
+YOLO가 탐지한 Bounding Box를 기준으로 과일 영역을 Crop한다.
+
+이를 통해 잎, 가지, 토양 등의 배경 영향을 줄이고 과일 자체의 특징을 분석할 수 있도록 한다.
+
+## 8. 색상 전처리 및 분석
+
+수확 적기 판단에서 색상 정보가 중요한 특징이므로 HSV 또는 Lab 색공간을 활용한다.
+
+- Hue
+- Saturation
+- Value
+- Lightness
+
+등의 특징을 분석하여 과일의 색상 변화를 확인한다.
+
+Gamma Correction이나 CLAHE 등의 조명 보정 기법은 실제 수집 데이터의 조명 환경을 확인한 후 필요한 경우 적용한다.
+
+## 9. 크기 및 형태 특징 분석
+
+Bounding Box의 크기와 비율 등을 이용하여 과일의 상대적인 크기와 형태를 분석한다.
+
+카메라와 과일 사이의 거리에 따라 픽셀 크기가 달라질 수 있으므로 절대적인 실제 크기보다는 상대적인 크기 특징을 우선 활용한다.
+
+## 10. 최종 판단
+
+최종적으로 색상 및 크기 특징을 이용하여 과일을 다음 세 가지 상태로 분류한다.
+
+| 상태 | 의미 |
+|---|---|
+| Unripe | 수확 전 |
+| Harvest Ready | 수확 적기 |
+| Overripe | 과숙 또는 주의 |
+
+초기 POC에서는 YOLO 객체 탐지와 OpenCV 기반 색상·크기 분석 Rule을 적용하고, 향후 데이터가 충분히 확보되면 숙도 분류 모델로 고도화한다.
