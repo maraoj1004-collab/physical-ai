@@ -1,0 +1,18 @@
+# Python bytecode & cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments & Virtual Envs
+.venv/
+venv/
+env/
+
+# IDE & Editor settings
+.vscode/
+.idea/
+
+# Local / Debug outputs
+out.png
+*.log

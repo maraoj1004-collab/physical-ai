@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>HarvestEdge — 프로젝트 보고서</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        leaf:   { 50: "#f2f7ef", 100: "#e1ecda", 200: "#c3d9b6", 500: "#4f7a3a", 600: "#3d6229", 700: "#2f4c20", 900: "#1a2b12" },
+        soil:   { 50: "#faf6f0", 100: "#f1e9dc", 500: "#8a6a4a", 800: "#3f2f20" },
+        ripe:   "#f2b705",
+        unripe: "#5fae3c",
+        over:   "#d6452f",
+        ink:    "#1f241c"
+      },
+      fontFamily: { sans: ["Noto Sans KR", "system-ui", "sans-serif"] }
+    }
+  }
+};
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400; vertical-align: middle; }
+
+  /* 보고서 본문 */
+  .doc { color: #1f241c; line-height: 1.85; word-break: keep-all; overflow-wrap: anywhere; }
+  .doc h1 { font-size: 1.75rem; font-weight: 900; line-height: 1.35; color: #2f4c20; margin: 3rem 0 1rem; padding-top: 2.5rem; border-top: 1px solid #f1e9dc; scroll-margin-top: 5rem; }
+  .doc h1:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+  .doc h2 { font-size: 1.3rem; font-weight: 800; color: #2f4c20; margin: 2.5rem 0 .9rem; padding-left: .8rem; border-left: 4px solid #3d6229; scroll-margin-top: 5rem; }
+  .doc h3 { font-size: 1.08rem; font-weight: 700; color: #3f2f20; margin: 1.8rem 0 .6rem; scroll-margin-top: 5rem; }
+  .doc h4 { font-weight: 700; margin: 1.4rem 0 .5rem; }
+  .doc p { margin: .8rem 0; color: rgba(63,47,32,.9); }
+  .doc ul, .doc ol { margin: .8rem 0; padding-left: 1.4rem; }
+  .doc ul { list-style: disc; }
+  .doc ol { list-style: decimal; }
+  .doc li { margin: .3rem 0; }
+  .doc li::marker { color: #3d6229; }
+  .doc strong { color: #2f4c20; }
+  .doc a { color: #3d6229; text-decoration: underline; text-underline-offset: 3px; }
+  .doc a:hover { color: #2f4c20; }
+  .doc blockquote { margin: 1rem 0; padding: .8rem 1rem; background: #f2f7ef; border-left: 4px solid #4f7a3a; border-radius: 0 .75rem .75rem 0; }
+  .doc blockquote p { margin: .2rem 0; }
+  .doc code { font-size: .88em; background: #f1e9dc; padding: .1rem .35rem; border-radius: .35rem; }
+  .doc pre { margin: 1rem 0; padding: 1rem 1.2rem; background: #1a2b12; color: #e1ecda; border-radius: 1rem; overflow-x: auto; line-height: 1.6; }
+  .doc pre code { background: none; padding: 0; color: inherit; }
+  .doc hr { margin: 2rem 0; border: 0; border-top: 1px solid #f1e9dc; }
+  .doc img { max-width: 100%; border-radius: 1rem; margin: 1rem 0; }
+  .doc .table-wrap { margin: 1.2rem 0; overflow-x: auto; border: 1px solid #f1e9dc; border-radius: 1rem; background: #fff; }
+  .doc table { width: 100%; border-collapse: collapse; font-size: .92rem; line-height: 1.6; }
+  .doc th { background: #f2f7ef; color: #2f4c20; font-weight: 700; text-align: left; padding: .7rem 1rem; white-space: nowrap; }
+  .doc td { padding: .7rem 1rem; border-top: 1px solid #f1e9dc; vertical-align: top; }
+  .toc a.active { color: #3d6229; font-weight: 700; border-color: #3d6229; }
+</style>
+</head>
+<body class="bg-soil-50 text-ink font-sans antialiased">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-soil-50/90 backdrop-blur border-b border-soil-100" style="top: env(safe-area-inset-top, 0px);">
+  <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2">
+      <span class="w-9 h-9 rounded-xl bg-leaf-600 text-white flex items-center justify-center">
+        <span class="material-symbols-outlined">nutrition</span>
+      </span>
+      <span class="flex flex-col leading-tight">
+        <span class="font-black text-leaf-700 tracking-tight">HarvestEdge</span>
+        <span class="text-[11px] text-soil-500">Edge AI Smart Harvesting</span>
+      </span>
+    </a>
+    <nav class="flex items-center gap-1 sm:gap-2 text-sm">
+      <a href="report.html?doc=project" data-doc="project" class="doc-tab hidden sm:inline-flex px-3 py-2 rounded-full text-soil-800 hover:text-leaf-600">프로젝트 보고서</a>
+      <a href="report.html?doc=models" data-doc="models" class="doc-tab hidden sm:inline-flex px-3 py-2 rounded-full text-soil-800 hover:text-leaf-600">모델 비교 보고서</a>
+      <a href="index.html" class="w-10 h-10 rounded-full flex items-center justify-center text-soil-800 hover:bg-soil-100" aria-label="홈으로">
+        <span class="material-symbols-outlined">home</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- Title -->
+  <section class="bg-leaf-50 border-b border-leaf-100">
+    <div class="max-w-5xl mx-auto px-4 py-10 md:py-14 flex flex-col gap-3">
+      <!-- 모바일 보고서 전환 -->
+      <div class="sm:hidden flex gap-2 pb-2 text-sm">
+        <a href="report.html?doc=project" data-doc="project" class="doc-tab px-4 py-2 rounded-full bg-white border border-leaf-100 text-soil-800">프로젝트 보고서</a>
+        <a href="report.html?doc=models" data-doc="models" class="doc-tab px-4 py-2 rounded-full bg-white border border-leaf-100 text-soil-800">모델 비교 보고서</a>
+      </div>
+      <span id="docLabel" class="text-xs font-bold text-leaf-600 tracking-widest">REPORT</span>
+      <h1 id="docTitle" class="text-2xl md:text-4xl font-black leading-snug text-ink">보고서를 불러오는 중…</h1>
+      <p id="docDesc" class="text-soil-800/75 max-w-2xl"></p>
+      <div class="flex flex-wrap gap-2 pt-2">
+        <a id="ghLink" href="#" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-4 h-10 rounded-full border-2 border-leaf-600 text-leaf-700 text-sm font-bold hover:bg-white">
+          <span class="material-symbols-outlined text-[20px]">open_in_new</span>GitHub 원문 보기
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-5xl mx-auto px-4 py-10 grid lg:grid-cols-[220px_minmax(0,1fr)] gap-10">
+    <!-- TOC -->
+    <aside class="hidden lg:block">
+      <div class="sticky top-24 flex flex-col gap-3">
+        <span class="text-xs font-bold text-soil-500 tracking-widest">목차</span>
+        <nav id="toc" class="toc flex flex-col text-sm text-soil-800/80 max-h-[70vh] overflow-y-auto"></nav>
+      </div>
+    </aside>
+
+    <!-- Body -->
+    <article class="bg-white border border-soil-100 rounded-3xl p-6 md:p-10 shadow-sm min-w-0">
+      <div id="doc" class="doc">
+        <p class="text-soil-500">보고서를 불러오는 중입니다…</p>
+      </div>
+    </article>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-4 pb-14 flex justify-center">
+    <a href="#" class="inline-flex items-center gap-1.5 px-5 h-11 rounded-full bg-leaf-600 text-white text-sm font-bold hover:bg-leaf-700">
+      <span class="material-symbols-outlined text-[20px]">arrow_upward</span>맨 위로
+    </a>
+  </div>
+</main>
+
+<footer class="border-t border-soil-100 bg-soil-100/60">
+  <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-2 md:items-center md:justify-between text-sm text-soil-500">
+    <span><strong class="text-leaf-700">HarvestEdge</strong> · Edge AI 기반 과일 수확 적기 판단 및 스마트 수확 보조 시스템</span>
+    <span>나만의 피지컬 AI 제품 만들기 프로젝트</span>
+  </div>
+</footer>
+
+<script>
+  const GH = "https://github.com/maraoj1004-collab/physical-ai/blob/main/";
+  const DOCS = {
+    project: {
+      label: "PROJECT REPORT",
+      title: "프로젝트 보고서",
+      desc: "데이터 수집·전처리 과정과 AI 모델 선정, 학습·검증 계획을 정리했습니다.",
+      file: "report/report.md"
+    },
+    models: {
+      label: "MODEL COMPARISON",
+      title: "AI 모델별 기능 및 활용 사례 비교 보고서",
+      desc: "Claude, YOLOE, DINO-X, SAM 3, SigLIP, OCR, MediaPipe의 기능과 프로젝트 적용 방안을 비교합니다.",
+      file: "report/AI_모델별_기능_비교_보고서.md"
+    }
+  };
+  const $ = id => document.getElementById(id);
+  const key = new URLSearchParams(location.search).get("doc");
+  const doc = DOCS[key] || DOCS.project;
+  const ghUrl = GH + doc.file.split("/").map(encodeURIComponent).join("/");
+
+  document.title = "HarvestEdge — " + doc.title;
+  $("docLabel").textContent = doc.label;
+  $("docTitle").textContent = doc.title;
+  $("docDesc").textContent = doc.desc;
+  $("ghLink").href = ghUrl;
+  document.querySelectorAll(".doc-tab").forEach(a => {
+    if (DOCS[a.dataset.doc] === doc) a.classList.add("!bg-leaf-600", "!text-white", "!border-leaf-600", "font-bold");
+  });
+
+  fetch(doc.file.split("/").map(encodeURIComponent).join("/"))
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(render)
+    .catch(() => {
+      $("doc").innerHTML = `<p>보고서를 불러오지 못했습니다.</p>
+        <p><a href="${ghUrl}" target="_blank" rel="noopener noreferrer">GitHub에서 원문 보기</a></p>`;
+    });
+
+  function render(md) {
+    const el = $("doc");
+    el.innerHTML = marked.parse(md);
+
+    // 상단 제목과 같은 첫 h1은 중복이므로 제거
+    const first = el.firstElementChild;
+    if (first && first.tagName === "H1" && first.textContent.trim() === doc.title) first.remove();
+
+    // "A ↓ B ↓ C" 형태의 단계 나열은 흐름도로 표시
+    el.querySelectorAll("p").forEach(p => {
+      const steps = p.textContent.split(/\s*\n\s*↓\s*\n\s*/).map(s => s.trim()).filter(Boolean);
+      if (steps.length < 3) return;
+      const flow = document.createElement("ol");
+      flow.className = "!list-none !pl-0 my-5 flex flex-col items-start";
+      flow.innerHTML = steps.map((s, i) => `
+        ${i ? '<li aria-hidden="true" class="ml-6 text-leaf-500 leading-none"><span class="material-symbols-outlined text-[20px]">arrow_downward</span></li>' : ""}
+        <li class="!my-0 flex items-center gap-3 px-4 py-2.5 rounded-xl ${i === steps.length - 1 ? "bg-leaf-600 text-white" : "bg-leaf-50 border border-leaf-100 text-leaf-900"} font-medium">
+          <span class="w-6 h-6 shrink-0 rounded-full ${i === steps.length - 1 ? "bg-white text-leaf-700" : "bg-leaf-600 text-white"} text-xs font-bold flex items-center justify-center">${i + 1}</span>
+          <span class="step-text"></span>
+        </li>`).join("");
+      flow.querySelectorAll(".step-text").forEach((span, i) => { span.textContent = steps[i]; });
+      p.replaceWith(flow);
+    });
+
+    // 표는 가로 스크롤 가능한 카드로 감싸기
+    el.querySelectorAll("table").forEach(t => {
+      const wrap = document.createElement("div");
+      wrap.className = "table-wrap";
+      t.replaceWith(wrap);
+      wrap.appendChild(t);
+    });
+    // 외부 링크는 새 탭
+    el.querySelectorAll("a[href^='http']").forEach(a => {
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+    });
+
+    // 목차 (h1 + h2)
+    const toc = $("toc");
+    const heads = [...el.querySelectorAll("h1, h2")];
+    heads.forEach((h, i) => {
+      h.id = "sec-" + i;
+      const a = document.createElement("a");
+      a.href = "#" + h.id;
+      a.textContent = h.textContent;
+      a.className = h.tagName === "H1"
+        ? "py-1.5 pl-3 border-l-2 border-soil-100 font-bold text-leaf-700 mt-2 first:mt-0 hover:text-leaf-600"
+        : "py-1.5 pl-6 border-l-2 border-soil-100 hover:text-leaf-600";
+      toc.appendChild(a);
+    });
+
+    // 현재 읽는 위치 표시
+    const links = [...toc.querySelectorAll("a")];
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        links.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + e.target.id));
+      });
+    }, { rootMargin: "-80px 0px -70% 0px" });
+    heads.forEach(h => io.observe(h));
+  }
+</script>
+</body>
+</html>

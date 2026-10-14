@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>HarvestEdge — Edge AI 스마트 수확 보조 시스템</title>
+<meta name="description" content="카메라와 Edge AI로 과일의 수확 적기를 실시간으로 판단하고 화면과 LED로 알려주는 스마트 농업용 Physical AI 시스템"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        leaf:   { 50: "#f2f7ef", 100: "#e1ecda", 200: "#c3d9b6", 500: "#4f7a3a", 600: "#3d6229", 700: "#2f4c20", 900: "#1a2b12" },
+        soil:   { 50: "#faf6f0", 100: "#f1e9dc", 500: "#8a6a4a", 800: "#3f2f20" },
+        ripe:   "#f2b705",
+        unripe: "#5fae3c",
+        over:   "#d6452f",
+        ink:    "#1f241c"
+      },
+      fontFamily: { sans: ["Noto Sans KR", "system-ui", "sans-serif"] }
+    }
+  }
+};
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .material-symbols-outlined { font-variation-settings: "FILL" 0, "wght" 400; vertical-align: middle; }
+  .box { transition: opacity .35s ease, transform .35s ease; }
+  .scanning .box { opacity: 0; transform: scale(.9); }
+  .scan-line { animation: scan 2.4s linear infinite; }
+  @keyframes scan { 0% { transform: translateY(0); } 100% { transform: translateY(300px); } }
+  .led-on { box-shadow: 0 0 0 4px rgba(242,183,5,.25), 0 0 24px 4px rgba(242,183,5,.7); background: #f2b705; }
+  .led-red-on { box-shadow: 0 0 0 4px rgba(214,69,47,.25), 0 0 24px 4px rgba(214,69,47,.6); background: #d6452f; }
+</style>
+</head>
+<body class="bg-soil-50 text-ink font-sans antialiased">
+
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-soil-50/90 backdrop-blur border-b border-soil-100" style="top: env(safe-area-inset-top, 0px);">
+  <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2">
+      <span class="w-9 h-9 rounded-xl bg-leaf-600 text-white flex items-center justify-center">
+        <span class="material-symbols-outlined">nutrition</span>
+      </span>
+      <span class="flex flex-col leading-tight">
+        <span class="font-black text-leaf-700 tracking-tight">HarvestEdge</span>
+        <span class="text-[11px] text-soil-500">Edge AI Smart Harvesting</span>
+      </span>
+    </a>
+    <nav class="hidden lg:flex items-center gap-6 text-sm text-soil-800">
+      <a href="#problem" class="hover:text-leaf-600">문제</a>
+      <a href="#demo" class="hover:text-leaf-600">데모</a>
+      <a href="#how" class="hover:text-leaf-600">작동 원리</a>
+      <a href="#edge" class="hover:text-leaf-600">왜 Edge AI?</a>
+      <a href="#roadmap" class="hover:text-leaf-600">로드맵</a>
+      <a href="#report-section" class="hover:text-leaf-600">프로젝트 보고서</a>
+      <a href="#model-compare" class="hover:text-leaf-600">모델 비교 보고서</a>
+    </nav>
+    <div class="flex items-center gap-2">
+      <a href="#demo" class="px-4 py-2 rounded-full bg-leaf-600 text-white text-sm font-bold hover:bg-leaf-700">데모 보기</a>
+      <button id="menuBtn" type="button" class="lg:hidden w-10 h-10 rounded-full flex items-center justify-center text-soil-800 hover:bg-soil-100" aria-label="메뉴 열기" aria-expanded="false" aria-controls="mobileNav">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile menu -->
+  <nav id="mobileNav" class="hidden lg:hidden border-t border-soil-100 bg-soil-50">
+    <div class="max-w-5xl mx-auto px-4 py-2 flex flex-col text-sm text-soil-800">
+      <a href="#problem" class="py-3 border-b border-soil-100 hover:text-leaf-600">문제</a>
+      <a href="#demo" class="py-3 border-b border-soil-100 hover:text-leaf-600">데모</a>
+      <a href="#how" class="py-3 border-b border-soil-100 hover:text-leaf-600">작동 원리</a>
+      <a href="#edge" class="py-3 border-b border-soil-100 hover:text-leaf-600">왜 Edge AI?</a>
+      <a href="#roadmap" class="py-3 border-b border-soil-100 hover:text-leaf-600">로드맵</a>
+      <a href="#report-section" class="py-3 border-b border-soil-100 hover:text-leaf-600">프로젝트 보고서</a>
+      <a href="#model-compare" class="py-3 hover:text-leaf-600">모델 비교 보고서</a>
+    </div>
+  </nav>
+</header>
+<script>
+  (function () {
+    const btn = document.getElementById("menuBtn");
+    const nav = document.getElementById("mobileNav");
+    const setOpen = (open) => {
+      nav.classList.toggle("hidden", !open);
+      btn.setAttribute("aria-expanded", String(open));
+      btn.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
+      btn.querySelector(".material-symbols-outlined").textContent = open ? "close" : "menu";
+    };
+    btn.addEventListener("click", () => setOpen(nav.classList.contains("hidden")));
+    nav.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+  })();
+</script>
+
+<main id="top">
+
+<!-- 1. Hero -->
+<section class="max-w-5xl mx-auto px-4 pt-10 pb-14 grid md:grid-cols-2 gap-10 items-center">
+  <div class="flex flex-col gap-5">
+    <span class="self-start inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 text-xs font-bold">
+      <span class="w-2 h-2 rounded-full bg-unripe animate-pulse"></span>
+      SMART FARM · PHYSICAL AI POC
+    </span>
+    <h1 class="text-3xl md:text-5xl font-black leading-tight tracking-tight">
+      익은 과일만,<br/><span class="text-leaf-600">AI가 먼저 찾아드립니다.</span>
+    </h1>
+    <p class="text-soil-800/80 leading-relaxed">
+      카메라로 비추기만 하면 Raspberry Pi 위의 Edge AI가 과일의 숙도를 판단하고,
+      수확 적기 과일을 화면에 표시하며 LED로 알려줍니다. 네트워크가 없는 과수원에서도 동작합니다.
+    </p>
+    <div class="flex flex-wrap gap-3">
+      <a href="#demo" class="inline-flex items-center gap-2 px-5 h-12 rounded-full bg-leaf-600 text-white font-bold hover:bg-leaf-700">
+        <span class="material-symbols-outlined">videocam</span>실시간 분석 데모
+      </a>
+      <a href="#how" class="inline-flex items-center gap-2 px-5 h-12 rounded-full border-2 border-leaf-600 text-leaf-700 font-bold hover:bg-leaf-50">
+        <span class="material-symbols-outlined">account_tree</span>작동 원리
+      </a>
+    </div>
+    <dl class="grid grid-cols-3 gap-3 pt-2">
+      <div class="p-3 rounded-xl bg-white border border-soil-100">
+        <dt class="text-[11px] text-soil-500">추론 시간 목표</dt>
+        <dd class="text-lg font-black text-leaf-700">≤100ms</dd>
+      </div>
+      <div class="p-3 rounded-xl bg-white border border-soil-100">
+        <dt class="text-[11px] text-soil-500">처리 속도 목표</dt>
+        <dd class="text-lg font-black text-leaf-700">≥10 FPS</dd>
+      </div>
+      <div class="p-3 rounded-xl bg-white border border-soil-100">
+        <dt class="text-[11px] text-soil-500">수확 대상 Recall</dt>
+        <dd class="text-lg font-black text-leaf-700">≥90%</dd>
+      </div>
+    </dl>
+  </div>
+
+  <!-- Hero illustration: device -->
+  <div class="relative rounded-3xl bg-gradient-to-br from-leaf-600 to-leaf-900 p-6 text-white shadow-xl overflow-hidden">
+    <div class="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/5"></div>
+    <div class="absolute -left-16 -bottom-16 w-56 h-56 rounded-full bg-white/5"></div>
+    <div class="relative flex flex-col gap-4">
+      <div class="flex items-center justify-between text-xs">
+        <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-ripe"></span>Raspberry Pi 5 · 온디바이스 추론</span>
+        <span class="opacity-70">OFFLINE OK</span>
+      </div>
+      <svg viewBox="0 0 320 200" class="w-full rounded-2xl bg-leaf-900/60" role="img" aria-label="과일나무와 탐지 박스 일러스트">
+        <rect width="320" height="200" fill="#24391a"/>
+        <path d="M0 170 Q80 150 160 165 T320 160 V200 H0Z" fill="#3f2f20"/>
+        <rect x="150" y="110" width="18" height="70" rx="4" fill="#5a4330"/>
+        <circle cx="160" cy="80" r="70" fill="#3d6229"/>
+        <circle cx="110" cy="95" r="40" fill="#4f7a3a"/>
+        <circle cx="210" cy="90" r="45" fill="#4f7a3a"/>
+        <circle cx="120" cy="70" r="11" fill="#f2b705"/><rect x="105" y="55" width="30" height="30" rx="4" fill="none" stroke="#f2b705" stroke-width="2.5"/>
+        <circle cx="200" cy="60" r="11" fill="#f2b705"/><rect x="185" y="45" width="30" height="30" rx="4" fill="none" stroke="#f2b705" stroke-width="2.5"/>
+        <circle cx="165" cy="105" r="10" fill="#7cc24f"/><rect x="151" y="91" width="28" height="28" rx="4" fill="none" stroke="#5fae3c" stroke-width="2.5"/>
+        <circle cx="230" cy="110" r="10" fill="#7cc24f"/><rect x="216" y="96" width="28" height="28" rx="4" fill="none" stroke="#5fae3c" stroke-width="2.5"/>
+        <circle cx="95" cy="115" r="11" fill="#a8321f"/><rect x="80" y="100" width="30" height="30" rx="4" fill="none" stroke="#d6452f" stroke-width="2.5"/>
+      </svg>
+      <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div class="p-2 rounded-xl bg-white/10"><div class="text-ripe font-black text-lg">2</div>수확 적기</div>
+        <div class="p-2 rounded-xl bg-white/10"><div class="text-[#9be07a] font-black text-lg">2</div>미숙</div>
+        <div class="p-2 rounded-xl bg-white/10"><div class="text-[#ff8a75] font-black text-lg">1</div>과숙 주의</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Problem -->
+<section id="problem" class="bg-white border-y border-soil-100">
+  <div class="max-w-5xl mx-auto px-4 py-14 flex flex-col gap-8">
+    <div class="flex flex-col gap-2 max-w-2xl">
+      <span class="text-xs font-bold text-leaf-600 tracking-widest">ORCHARD FRICTION</span>
+      <h2 class="text-2xl md:text-3xl font-black leading-snug">수확 시기 판단은 아직도<br/>사람의 눈과 경험에 기대고 있습니다.</h2>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">person_search</span>
+        <div><h3 class="font-bold">작업자마다 다른 기준</h3><p class="text-sm text-soil-800/75 mt-1">같은 과일도 사람에 따라 "익었다"의 판단이 달라 품질이 들쭉날쭉합니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">schedule</span>
+        <div><h3 class="font-bold">오래 걸리는 탐색</h3><p class="text-sm text-soil-800/75 mt-1">넓은 과수원에서 수확 대상 과일을 하나하나 찾느라 시간이 듭니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">eco</span>
+        <div><h3 class="font-bold">가려진 과일 놓침</h3><p class="text-sm text-soil-800/75 mt-1">잎이나 가지 뒤에 숨은 과일은 그냥 지나치기 쉽습니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">block</span>
+        <div><h3 class="font-bold">미숙과 오수확</h3><p class="text-sm text-soil-800/75 mt-1">덜 익은 과일을 잘못 따면 상품 가치를 잃습니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">warning</span>
+        <div><h3 class="font-bold">과숙 손실</h3><p class="text-sm text-soil-800/75 mt-1">적기를 놓친 과일은 과숙되어 버려지게 됩니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">signal_cellular_off</span>
+        <div><h3 class="font-bold">불안정한 네트워크</h3><p class="text-sm text-soil-800/75 mt-1">클라우드 AI는 과수원의 약한 통신 환경에서 느려지거나 멈춥니다.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Live demo -->
+<section id="demo" class="max-w-5xl mx-auto px-4 py-14 flex flex-col gap-8">
+  <div class="flex flex-col gap-2 max-w-2xl">
+    <span class="text-xs font-bold text-leaf-600 tracking-widest">LIVE DETECTION (SIMULATION)</span>
+    <h2 class="text-2xl md:text-3xl font-black leading-snug">이렇게 보입니다</h2>
+    <p class="text-soil-800/75">아래는 실제 시스템의 화면 구성을 재현한 시뮬레이션입니다. "다음 나무 분석"을 눌러 보세요.</p>
+  </div>
+
+  <div class="grid lg:grid-cols-[1fr_280px] gap-5">
+    <!-- Camera view -->
+    <div id="cam" class="relative rounded-3xl overflow-hidden bg-leaf-900 shadow-lg">
+      <svg viewBox="0 0 480 300" class="w-full block" role="img" aria-label="카메라 화면 시뮬레이션">
+        <rect width="480" height="300" fill="#1f3216"/>
+        <path d="M0 255 Q120 235 240 250 T480 245 V300 H0Z" fill="#3f2f20"/>
+        <rect x="228" y="170" width="24" height="90" rx="5" fill="#5a4330"/>
+        <circle cx="240" cy="120" r="105" fill="#3d6229"/>
+        <circle cx="160" cy="140" r="62" fill="#4f7a3a"/>
+        <circle cx="320" cy="135" r="68" fill="#4f7a3a"/>
+        <g id="fruits"></g>
+        <rect class="scan-line" x="0" y="0" width="480" height="3" fill="#9be07a" opacity=".55"/>
+      </svg>
+      <div class="absolute top-3 left-3 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 text-white text-xs backdrop-blur">
+        <span class="w-2 h-2 rounded-full bg-over animate-pulse"></span>LIVE · Tree <span id="treeNo">1</span>
+      </div>
+      <div class="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-black/50 text-white text-xs font-mono backdrop-blur">
+        <span id="latency">84</span>ms · <span id="fps">12</span> FPS
+      </div>
+    </div>
+
+    <!-- Result panel -->
+    <aside class="flex flex-col gap-3">
+      <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-3">
+        <h3 class="font-bold text-sm text-soil-500">분석 결과</h3>
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-sm border-2 border-ripe"></span>수확 적기</span>
+          <span id="cReady" class="text-2xl font-black">0</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-sm border-2 border-unripe"></span>미숙</span>
+          <span id="cUnripe" class="text-2xl font-black">0</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-sm border-2 border-over"></span>과숙 주의</span>
+          <span id="cOver" class="text-2xl font-black">0</span>
+        </div>
+      </div>
+      <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-3">
+        <h3 class="font-bold text-sm text-soil-500">LED 출력 (GPIO)</h3>
+        <div class="flex items-center gap-4">
+          <span class="flex flex-col items-center gap-1 text-xs"><span id="ledY" class="w-7 h-7 rounded-full bg-soil-100 transition-all"></span>적기</span>
+          <span class="flex flex-col items-center gap-1 text-xs"><span id="ledR" class="w-7 h-7 rounded-full bg-soil-100 transition-all"></span>주의</span>
+          <p id="ledMsg" class="text-sm text-soil-800/80 flex-1"></p>
+        </div>
+      </div>
+      <button id="nextBtn" type="button" class="h-12 rounded-full bg-leaf-600 text-white font-bold hover:bg-leaf-700 inline-flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined">forest</span>다음 나무 분석
+      </button>
+    </aside>
+  </div>
+</section>
+
+<!-- 4. How it works -->
+<section id="how" class="bg-leaf-900 text-white">
+  <div class="max-w-5xl mx-auto px-4 py-14 flex flex-col gap-8">
+    <div class="flex flex-col gap-2 max-w-2xl">
+      <span class="text-xs font-bold text-ripe tracking-widest">HOW IT WORKS</span>
+      <h2 class="text-2xl md:text-3xl font-black leading-snug">카메라에서 LED까지,<br/>모든 판단이 현장에서 끝납니다.</h2>
+    </div>
+    <ol class="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <li class="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
+        <span class="text-ripe font-black">01</span>
+        <span class="material-symbols-outlined text-3xl">photo_camera</span>
+        <h3 class="font-bold">영상 입력</h3>
+        <p class="text-sm text-white/70">카메라 영상을 Raspberry Pi 5로 전달합니다.</p>
+      </li>
+      <li class="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
+        <span class="text-ripe font-black">02</span>
+        <span class="material-symbols-outlined text-3xl">center_focus_strong</span>
+        <h3 class="font-bold">과일 탐지</h3>
+        <p class="text-sm text-white/70">YOLO 모델이 과일마다 Bounding Box를 만듭니다.</p>
+      </li>
+      <li class="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
+        <span class="text-ripe font-black">03</span>
+        <span class="material-symbols-outlined text-3xl">palette</span>
+        <h3 class="font-bold">색상·크기 분석</h3>
+        <p class="text-sm text-white/70">OpenCV로 HSV 색상과 박스 크기를 분석합니다.</p>
+      </li>
+      <li class="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
+        <span class="text-ripe font-black">04</span>
+        <span class="material-symbols-outlined text-3xl">fact_check</span>
+        <h3 class="font-bold">수확 적기 판단</h3>
+        <p class="text-sm text-white/70">미숙 · 수확 적기 · 과숙 주의로 분류합니다.</p>
+      </li>
+      <li class="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
+        <span class="text-ripe font-black">05</span>
+        <span class="material-symbols-outlined text-3xl">emoji_objects</span>
+        <h3 class="font-bold">화면 + LED 출력</h3>
+        <p class="text-sm text-white/70">MQTT/WebSocket으로 결과를 보내고 GPIO로 LED를 켭니다.</p>
+      </li>
+    </ol>
+
+    <div class="overflow-x-auto rounded-2xl bg-white/5 border border-white/10">
+      <table class="w-full text-sm min-w-[480px]">
+        <thead class="text-left text-white/60">
+          <tr><th class="p-3">상태</th><th class="p-3">의미</th><th class="p-3">화면</th><th class="p-3">LED</th></tr>
+        </thead>
+        <tbody class="divide-y divide-white/10">
+          <tr><td class="p-3 font-bold">Unripe</td><td class="p-3">아직 수확하기 이른 과일</td><td class="p-3"><span class="inline-block w-3 h-3 rounded-sm border-2 border-unripe align-middle"></span> 초록 박스</td><td class="p-3">—</td></tr>
+          <tr><td class="p-3 font-bold">Harvest Ready</td><td class="p-3">수확 적기의 과일</td><td class="p-3"><span class="inline-block w-3 h-3 rounded-sm border-2 border-ripe align-middle"></span> 노란 박스</td><td class="p-3">노란 LED ON</td></tr>
+          <tr><td class="p-3 font-bold">Overripe / Warning</td><td class="p-3">과숙 또는 주의 필요</td><td class="p-3"><span class="inline-block w-3 h-3 rounded-sm border-2 border-over align-middle"></span> 빨간 박스</td><td class="p-3">빨간 LED ON</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Why Edge -->
+<section id="edge" class="max-w-5xl mx-auto px-4 py-14 flex flex-col gap-8">
+  <div class="flex flex-col gap-2 max-w-2xl">
+    <span class="text-xs font-bold text-leaf-600 tracking-widest">WHY EDGE AI</span>
+    <h2 class="text-2xl md:text-3xl font-black leading-snug">왜 클라우드가 아니라 Edge일까요?</h2>
+    <p class="text-soil-800/75">과수원은 통신이 약하고, 수확 판단은 즉시 이뤄져야 합니다. 그래서 추론을 현장의 기기에서 직접 수행합니다.</p>
+  </div>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="p-6 rounded-2xl bg-white border border-soil-100 flex flex-col gap-3">
+      <h3 class="font-bold inline-flex items-center gap-2 text-soil-500"><span class="material-symbols-outlined">cloud</span>Cloud 방식</h3>
+      <p class="font-mono text-sm text-soil-800/80">Camera → Network → Cloud Server → AI 추론 → Network → Result</p>
+      <ul class="text-sm text-soil-800/80 list-disc pl-5 space-y-1">
+        <li>네트워크 왕복으로 지연 발생</li>
+        <li>통신이 끊기면 사용 불가</li>
+        <li>영상 데이터를 외부로 전송</li>
+      </ul>
+    </div>
+    <div class="p-6 rounded-2xl bg-leaf-50 border-2 border-leaf-500 flex flex-col gap-3">
+      <h3 class="font-bold inline-flex items-center gap-2 text-leaf-700"><span class="material-symbols-outlined">memory</span>Edge 방식 (HarvestEdge)</h3>
+      <p class="font-mono text-sm text-leaf-900">Camera → Raspberry Pi → AI 추론 → Result</p>
+      <ul class="text-sm text-leaf-900 list-disc pl-5 space-y-1">
+        <li>현장에서 즉시 판단</li>
+        <li>오프라인에서도 동작</li>
+        <li>영상이 기기 밖으로 나가지 않음</li>
+      </ul>
+    </div>
+  </div>
+  <p class="text-sm text-soil-800/75 p-4 rounded-xl bg-soil-100">
+    <span class="material-symbols-outlined text-leaf-600">science</span>
+    POC에서는 같은 입력 영상으로 Cloud와 Edge의 <strong>Latency와 FPS를 직접 측정</strong>하여, 주장 대신 실제 수치로 Edge AI의 효과를 검증합니다.
+  </p>
+</section>
+
+<!-- 6. Tech stack & KPI -->
+<section class="bg-white border-y border-soil-100">
+  <div class="max-w-5xl mx-auto px-4 py-14 grid md:grid-cols-2 gap-10">
+    <div class="flex flex-col gap-4">
+      <span class="text-xs font-bold text-leaf-600 tracking-widest">TECH STACK</span>
+      <h2 class="text-2xl font-black">사용 기술</h2>
+      <div class="flex flex-wrap gap-2 text-sm">
+        <span class="px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 font-medium">Python</span>
+        <span class="px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 font-medium">YOLO</span>
+        <span class="px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 font-medium">OpenCV</span>
+        <span class="px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 font-medium">Raspberry Pi 5</span>
+        <span class="px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 font-medium">ONNX Runtime / TFLite</span>
+        <span class="px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 font-medium">MQTT / WebSocket</span>
+        <span class="px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 font-medium">GPIO / LED</span>
+        <span class="px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 font-medium">Streamlit / Web UI</span>
+      </div>
+    </div>
+    <div class="flex flex-col gap-4">
+      <span class="text-xs font-bold text-leaf-600 tracking-widest">TARGET KPI</span>
+      <h2 class="text-2xl font-black">POC 목표 지표</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <tbody class="divide-y divide-soil-100">
+            <tr><td class="py-2">과일 탐지 mAP</td><td class="py-2 text-right font-bold">≥ 90%</td></tr>
+            <tr><td class="py-2">수확 적기 분류 정확도</td><td class="py-2 text-right font-bold">≥ 85%</td></tr>
+            <tr class="text-leaf-700"><td class="py-2 font-bold">수확 대상 Recall (핵심)</td><td class="py-2 text-right font-black">≥ 90%</td></tr>
+            <tr class="text-leaf-700"><td class="py-2 font-bold">Edge 추론 시간 (핵심)</td><td class="py-2 text-right font-black">≤ 100ms</td></tr>
+            <tr><td class="py-2">실시간 처리 속도</td><td class="py-2 text-right font-bold">≥ 10 FPS</td></tr>
+            <tr><td class="py-2">수확 대상 개수 정확도</td><td class="py-2 text-right font-bold">≥ 90%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-soil-500">※ 개발 목표치이며, 측정 결과는 POC 완료 후 공개합니다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Roadmap -->
+<section id="roadmap" class="max-w-5xl mx-auto px-4 py-14 flex flex-col gap-8">
+  <div class="flex flex-col gap-2 max-w-2xl">
+    <span class="text-xs font-bold text-leaf-600 tracking-widest">ROADMAP</span>
+    <h2 class="text-2xl md:text-3xl font-black leading-snug">Vision → Decision → Action</h2>
+    <p class="text-soil-800/75">LED 출력에서 시작해, 최종적으로는 로봇팔 자동 수확까지 확장합니다.</p>
+  </div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="p-5 rounded-2xl bg-leaf-600 text-white flex flex-col gap-2">
+      <span class="text-xs font-bold opacity-80">NOW · POC</span>
+      <h3 class="font-bold">수확 적기 판단 + LED</h3>
+      <p class="text-sm opacity-85">단일 작물 대상, YOLO + 색상·크기 Rule, Raspberry Pi 추론</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-2">
+      <span class="text-xs font-bold text-leaf-600">PHASE 2</span>
+      <h3 class="font-bold">AI 숙도 분류 모델</h3>
+      <p class="text-sm text-soil-800/75">Rule 기반 판단을 학습된 분류 모델로 고도화</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-2">
+      <span class="text-xs font-bold text-leaf-600">PHASE 3</span>
+      <h3 class="font-bold">스마트 농업 확장</h3>
+      <p class="text-sm text-soil-800/75">병해충 탐지, 생육 분석, 수확량 예측, 품질 분류</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-2">
+      <span class="text-xs font-bold text-leaf-600">PHASE 4</span>
+      <h3 class="font-bold">자동 수확 로봇</h3>
+      <p class="text-sm text-soil-800/75">3D 위치 추정 + Robot Arm으로 실제 수확까지</p>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Project Report Section -->
+<section id="report-section" class="bg-white border-y border-soil-100 scroll-mt-16">
+  <div class="max-w-5xl mx-auto px-4 py-14 flex flex-col gap-8">
+    <div class="flex flex-col gap-2 max-w-2xl">
+      <span class="text-xs font-bold text-leaf-600 tracking-widest">PROJECT REPORT</span>
+      <h2 class="text-2xl md:text-3xl font-black leading-snug">프로젝트 보고서</h2>
+      <p class="text-soil-800/75">데이터 수집 및 전처리 과정과 AI 모델 선정 및 학습·검증 계획을 카드 형태로 요약했습니다.</p>
+    </div>
+
+    <h3 class="text-xl md:text-2xl font-black leading-snug inline-flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-leaf-600 text-white text-base flex items-center justify-center">1</span>데이터 수집 및 전처리 과정</h3>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">photo_library</span>
+        <div><h3 class="font-bold">다양한 환경의 데이터 수집</h3><p class="text-sm text-soil-800/75 mt-1">미숙 · 수확 적기 · 과숙 과일을 잎 가림, 겹침, 직사광선, 그림자, 복잡한 배경 등 실제 과수원 조건에서 수집합니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">image_search</span>
+        <div><h3 class="font-bold">이미지 품질 확인</h3><p class="text-sm text-soil-800/75 mt-1">Blur, 과다·저노출, 노이즈, 초점 불량 이미지는 학습과 분석에 적합하지 않은 데이터로 분류합니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">aspect_ratio</span>
+        <div><h3 class="font-bold">Resize / Letterbox</h3><p class="text-sm text-soil-800/75 mt-1">가로세로 비율을 유지한 채 YOLO 입력 크기에 맞춰 과일 형태가 변형되지 않도록 합니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">crop</span>
+        <div><h3 class="font-bold">YOLO 탐지 → Fruit Crop</h3><p class="text-sm text-soil-800/75 mt-1">과일마다 Bounding Box를 만들고 그 영역만 잘라내 잎·가지·토양 등 배경의 영향을 줄입니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">palette</span>
+        <div><h3 class="font-bold">HSV / Lab 색상 분석</h3><p class="text-sm text-soil-800/75 mt-1">Hue, Saturation, Value, Lightness로 색 변화를 분석합니다. Gamma Correction · CLAHE는 필요할 때만 적용합니다.</p></div>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex gap-3">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">straighten</span>
+        <div><h3 class="font-bold">크기 · 형태 분석</h3><p class="text-sm text-soil-800/75 mt-1">촬영 거리에 따라 픽셀 크기가 달라지므로 절대 크기보다 상대적인 크기와 비율을 우선 활용합니다.</p></div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2 max-w-2xl pt-4">
+      <h3 class="text-xl md:text-2xl font-black leading-snug inline-flex items-center gap-2"><span class="w-8 h-8 rounded-full bg-leaf-600 text-white text-base flex items-center justify-center">2</span>AI 모델 선정 및 학습·검증 계획</h3>
+      <p class="text-soil-800/75">YOLO는 "과일이 어디에 있는가?", OpenCV Rule은 "수확할 때가 되었는가?"를 판단합니다.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="p-5 rounded-2xl bg-leaf-600 text-white flex flex-col gap-2">
+        <span class="material-symbols-outlined text-3xl">model_training</span>
+        <h3 class="font-bold">경량 YOLO 모델</h3>
+        <p class="text-sm opacity-85">Raspberry Pi 5에서 실제 FPS와 추론 시간을 측정해 최종 모델을 선정합니다.</p>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex flex-col gap-2">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">splitscreen</span>
+        <h3 class="font-bold">데이터 분할 70 · 15 · 15</h3>
+        <p class="text-sm text-soil-800/75">Training · Validation · Test로 나누고, 유사한 장면이 서로 다른 세트에 섞이지 않게 합니다.</p>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex flex-col gap-2">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">auto_awesome</span>
+        <h3 class="font-bold">데이터 증강</h3>
+        <p class="text-sm text-soil-800/75">밝기, 회전, 크기, 좌우 반전, Crop을 적용하되 숙도 판단의 핵심인 색상 변형은 최소화합니다.</p>
+      </div>
+      <div class="p-5 rounded-2xl bg-soil-50 flex flex-col gap-2">
+        <span class="material-symbols-outlined text-leaf-600 text-3xl">monitoring</span>
+        <h3 class="font-bold">검증 지표</h3>
+        <p class="text-sm text-soil-800/75">탐지는 Precision · Recall · mAP, 숙도 판단은 Accuracy · F1-score · Confusion Matrix로 평가합니다.</p>
+      </div>
+    </div>
+
+    <div class="p-5 rounded-2xl bg-soil-100 flex flex-col gap-3">
+      <h3 class="font-bold inline-flex items-center gap-2"><span class="material-symbols-outlined text-leaf-600">fact_check</span>최종 검증 시나리오</h3>
+      <div class="flex flex-wrap gap-2 text-sm">
+        <span class="px-3 py-1.5 rounded-full bg-white text-soil-800">① 정상 밝기</span>
+        <span class="px-3 py-1.5 rounded-full bg-white text-soil-800">② 강한 직사광선</span>
+        <span class="px-3 py-1.5 rounded-full bg-white text-soil-800">③ 그림자</span>
+        <span class="px-3 py-1.5 rounded-full bg-white text-soil-800">④ 잎에 가려진 과일</span>
+        <span class="px-3 py-1.5 rounded-full bg-white text-soil-800">⑤ 겹친 과일</span>
+        <span class="px-3 py-1.5 rounded-full bg-white text-soil-800">⑥ 다양한 촬영 거리</span>
+        <span class="px-3 py-1.5 rounded-full bg-leaf-100 text-leaf-700 font-bold">⑦ Raspberry Pi 5 실시간 FPS · Latency</span>
+      </div>
+    </div>
+
+    <a href="https://github.com/maraoj1004-collab/physical-ai/blob/main/report/README.md" target="_blank" rel="noopener noreferrer" class="self-start inline-flex items-center gap-2 px-5 h-12 rounded-full border-2 border-leaf-600 text-leaf-700 font-bold hover:bg-leaf-50">
+      <span class="material-symbols-outlined">description</span>전체 보고서 보기
+    </a>
+  </div>
+</section>
+
+<!-- 9. Model Comparison Section -->
+<section id="model-compare" class="max-w-5xl mx-auto px-4 py-14 flex flex-col gap-8 scroll-mt-16">
+  <div class="flex flex-col gap-2 max-w-2xl">
+    <span class="text-xs font-bold text-leaf-600 tracking-widest">MODEL COMPARISON</span>
+    <h2 class="text-2xl md:text-3xl font-black leading-snug">모델 비교 보고서</h2>
+    <p class="text-soil-800/75">AI 모델별 기능 및 활용 사례 비교 보고서 — 7가지 기술의 역할과 프로젝트 적용 우선순위를 카드 형태로 요약했습니다.</p>
+  </div>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="p-5 rounded-2xl bg-white border-2 border-leaf-500 flex flex-col gap-2">
+      <span class="self-start px-2 py-0.5 rounded-full bg-leaf-600 text-white text-[11px] font-bold">우선 적용 (비교 대상)</span>
+      <h3 class="font-black text-lg">YOLOE</h3>
+      <p class="text-xs text-soil-500">개방형 객체 탐지 · 분할</p>
+      <p class="text-sm text-soil-800/75">YOLO 계열 탐지 + OpenCV 구성에서 개방형 탐지가 필요할 때 비교해 과일 탐지 · 영역 추출에 씁니다.</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-2">
+      <span class="self-start px-2 py-0.5 rounded-full bg-leaf-100 text-leaf-700 text-[11px] font-bold">선택 적용</span>
+      <h3 class="font-black text-lg">DINO-X</h3>
+      <p class="text-xs text-soil-500">개방형 객체 탐지</p>
+      <p class="text-sm text-soil-800/75">잎 · 가지가 섞인 복잡한 장면의 탐지와 데이터셋 라벨링 보조에 활용합니다.</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-2">
+      <span class="self-start px-2 py-0.5 rounded-full bg-leaf-100 text-leaf-700 text-[11px] font-bold">선택 적용</span>
+      <h3 class="font-black text-lg">SAM 3</h3>
+      <p class="text-xs text-soil-500">객체 분할 · 추적</p>
+      <p class="text-sm text-soil-800/75">과일과 배경을 픽셀 단위로 분리해 색상 분석의 배경 영향을 줄입니다.</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-2">
+      <span class="self-start px-2 py-0.5 rounded-full bg-ripe/20 text-soil-800 text-[11px] font-bold">실험 적용</span>
+      <h3 class="font-black text-lg">SigLIP</h3>
+      <p class="text-xs text-soil-500">이미지 - 텍스트 유사도</p>
+      <p class="text-sm text-soil-800/75">"수확 적기의 과일" 같은 설명 문장과 이미지의 유사도를 비교하는 실험에 씁니다.</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-2">
+      <span class="self-start px-2 py-0.5 rounded-full bg-soil-100 text-soil-800 text-[11px] font-bold">확장 적용</span>
+      <h3 class="font-black text-lg">MediaPipe</h3>
+      <p class="text-xs text-soil-500">랜드마크 · 제스처 인식</p>
+      <p class="text-sm text-soil-800/75">손짓으로 다음 과일을 고르거나 화면을 전환하는 등 손동작 제어에 활용합니다.</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-2">
+      <span class="self-start px-2 py-0.5 rounded-full bg-soil-100 text-soil-800 text-[11px] font-bold">확장 적용</span>
+      <h3 class="font-black text-lg">OCR</h3>
+      <p class="text-xs text-soil-500">문자 인식</p>
+      <p class="text-sm text-soil-800/75">농산물 라벨, 재배 기록, 작업 기록지를 자동으로 읽는 확장 기능에 씁니다.</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-white border border-soil-100 flex flex-col gap-2">
+      <span class="self-start px-2 py-0.5 rounded-full bg-soil-100 text-soil-800 text-[11px] font-bold">개발 보조</span>
+      <h3 class="font-black text-lg">Claude</h3>
+      <p class="text-xs text-soil-500">대규모 언어 모델 (LLM)</p>
+      <p class="text-sm text-soil-800/75">코드 작성, 오류 해결, 모델 비교, 기술 문서 작성 등 개발 과정을 돕습니다.</p>
+    </div>
+    <div class="p-5 rounded-2xl bg-leaf-600 text-white flex flex-col gap-2">
+      <span class="material-symbols-outlined text-3xl">verified</span>
+      <h3 class="font-black text-lg">결론</h3>
+      <p class="text-sm opacity-85">초기 POC는 객체 탐지 모델 + OpenCV가 중심입니다. 최종 모델은 실제 데이터와 Raspberry Pi 환경에서 검증한 뒤 정합니다.</p>
+    </div>
+  </div>
+
+  <a href="https://github.com/maraoj1004-collab/physical-ai/blob/main/report/README.md#ai-%EB%AA%A8%EB%8D%B8%EB%B3%84-%EA%B8%B0%EB%8A%A5-%EB%B0%8F-%ED%99%9C%EC%9A%A9-%EC%82%AC%EB%A1%80-%EB%B9%84%EA%B5%90-%EB%B3%B4%EA%B3%A0%EC%84%9C" target="_blank" rel="noopener noreferrer" class="self-start inline-flex items-center gap-2 px-5 h-12 rounded-full border-2 border-leaf-600 text-leaf-700 font-bold hover:bg-leaf-50">
+    <span class="material-symbols-outlined">description</span>전체 보고서 보기
+  </a>
+</section>
+
+</main>
+
+<footer class="border-t border-soil-100 bg-soil-100/60">
+  <div class="max-w-5xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-2 md:items-center md:justify-between text-sm text-soil-500">
+    <span><strong class="text-leaf-700">HarvestEdge</strong> · Edge AI 기반 과일 수확 적기 판단 및 스마트 수확 보조 시스템</span>
+    <span>나만의 피지컬 AI 제품 만들기 프로젝트</span>
+  </div>
+</footer>
+
+<script>
+  // 데모용 가상 탐지 결과 (state: ready | unripe | over)
+  const TREES = [
+    [[150,85,"ready"],[205,65,"ready"],[300,95,"ready"],[245,140,"unripe"],[330,160,"unripe"],[175,165,"unripe"],[120,140,"over"]],
+    [[140,100,"unripe"],[200,70,"unripe"],[280,80,"unripe"],[320,140,"unripe"],[230,150,"ready"]],
+    [[160,80,"ready"],[220,60,"ready"],[290,75,"ready"],[340,120,"ready"],[260,150,"ready"],[130,150,"unripe"],[195,170,"over"],[310,180,"over"]]
+  ];
+  const STYLE = {
+    ready:  { fill: "#f2b705", stroke: "#f2b705", label: "Ready" },
+    unripe: { fill: "#7cc24f", stroke: "#5fae3c", label: "Unripe" },
+    over:   { fill: "#a8321f", stroke: "#d6452f", label: "Over" }
+  };
+  const $ = id => document.getElementById(id);
+  let tree = 0;
+
+  function render() {
+    const data = TREES[tree];
+    const g = $("fruits");
+    g.innerHTML = data.map(([x, y, s]) => {
+      const st = STYLE[s];
+      return `<circle cx="${x}" cy="${y}" r="13" fill="${st.fill}"/>
+        <g class="box"><rect x="${x-19}" y="${y-19}" width="38" height="38" rx="5" fill="none" stroke="${st.stroke}" stroke-width="3"/>
+        <rect x="${x-19}" y="${y-33}" width="${st.label.length*7+10}" height="13" rx="3" fill="${st.stroke}"/>
+        <text x="${x-14}" y="${y-23}" font-size="10" font-family="monospace" fill="#1f241c" font-weight="700">${st.label}</text></g>`;
+    }).join("");
+
+    const count = s => data.filter(d => d[2] === s).length;
+    const ready = count("ready"), over = count("over");
+    $("cReady").textContent = ready;
+    $("cUnripe").textContent = count("unripe");
+    $("cOver").textContent = over;
+    $("treeNo").textContent = tree + 1;
+    $("latency").textContent = 70 + Math.floor(Math.random() * 25);
+    $("fps").textContent = 11 + Math.floor(Math.random() * 3);
+
+    $("ledY").className = "w-7 h-7 rounded-full transition-all " + (ready ? "led-on" : "bg-soil-100");
+    $("ledR").className = "w-7 h-7 rounded-full transition-all " + (over ? "led-red-on" : "bg-soil-100");
+    $("ledMsg").textContent = ready
+      ? `수확 대상 ${ready}개를 찾았습니다.`
+      : "아직 수확할 과일이 없습니다.";
+  }
+
+  $("nextBtn").addEventListener("click", () => {
+    const cam = $("cam");
+    cam.classList.add("scanning");
+    tree = (tree + 1) % TREES.length;
+    setTimeout(() => { render(); requestAnimationFrame(() => cam.classList.remove("scanning")); }, 500);
+  });
+
+  render();
+</script>
+<!-- === 챗봇 섹션 추가 영역 === -->
+<section id="chatbot-section" class="max-w-5xl mx-auto px-4 py-14">
+  <div class="p-6 rounded-3xl bg-white border border-soil-100 shadow-sm flex flex-col gap-4">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-leaf-600">smart_toy</span>
+      <h3 class="text-xl font-black">HarvestEdge 프로젝트 AI 챗봇</h3>
+    </div>
+    <p class="text-sm text-soil-800/75">프로젝트 자료와 기술 스택에 대해 무엇이든 물어보세요!</p>
+
+    <!-- 채팅 대화 내용이 표시되는 박스 -->
+    <div id="chatLog" class="h-64 overflow-y-auto p-4 rounded-2xl bg-soil-50 border border-soil-100 flex flex-col gap-3 text-sm">
+      <div class="p-3 rounded-xl bg-white border border-soil-100 self-start max-w-[85%] text-soil-800">
+        안녕하세요! HarvestEdge 프로젝트에 대해 궁금한 점을 입력해 주세요.
+      </div>
+    </div>
+
+    <!-- 입력창 및 전송 버튼 -->
+    <div class="flex gap-2">
+      <input 
+        type="text" 
+        id="chatInput" 
+        placeholder="예: HarvestEdge의 핵심 목표는 무엇인가요?" 
+        class="flex-1 px-4 py-3 rounded-xl border border-soil-200 focus:outline-none focus:border-leaf-600 text-sm"
+        onkeydown="if(event.key === 'Enter') handleChatSend();"
+      />
+      <button 
+        type="button" 
+        onclick="handleChatSend()" 
+        id="chatSendBtn"
+        class="px-6 py-3 rounded-xl bg-leaf-600 text-white font-bold text-sm hover:bg-leaf-700 transition-all"
+      >
+        전송
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- 챗봇 연동 자바스크립트 -->
+<script>
+  async function handleChatSend() {
+    const input = document.getElementById('chatInput');
+    const chatLog = document.getElementById('chatLog');
+    const sendBtn = document.getElementById('chatSendBtn');
+    const question = input.value.trim();
+
+    if (!question) return;
+
+    // 1. 사용자 질문을 화면에 표시
+    chatLog.innerHTML += `
+      <div class="p-3 rounded-xl bg-leaf-600 text-white self-end max-w-[85%]">
+        ${escapeHtml(question)}
+      </div>
+    `;
+    input.value = '';
+    chatLog.scrollTop = chatLog.scrollHeight;
+
+    // 2. 로딩 메시지 추가
+    const loadingId = 'loading-' + Date.now();
+    chatLog.innerHTML += `
+      <div id="${loadingId}" class="p-3 rounded-xl bg-white border border-soil-100 self-start max-w-[85%] text-soil-500 animate-pulse">
+        답변을 생각하는 중입니다...
+      </div>
+    `;
+    chatLog.scrollTop = chatLog.scrollHeight;
+    sendBtn.disabled = true;
+
+    try {
+      // 💡 본인의 Supabase Anon (Publishable) 키를 아래에 넣어주세요!
+      const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxcWtobnBydGZ6cXJkc3R3Y2J1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4NzExMTcsImV4cCI6MjEwNzQ0NzExN30.Un9UVHWBJdRb41-KeyMmZopKoyBsfkZXo7ow337MAYM';
+      const functionUrl = 'https://ikqnktporlfabchdqkts.supabase.co/functions/v1/harvestedge-chat';
+
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'apikey': supabaseAnonKey
+        },
+        body: JSON.stringify({ question: question })
+      });
+
+      const data = await response.json();
+      document.getElementById(loadingId).remove();
+
+      if (!response.ok) {
+        throw new Error(data.error || '답변을 가져오지 못했습니다.');
+      }
+
+      // 3. AI 답변을 화면에 표시
+      chatLog.innerHTML += `
+        <div class="p-3 rounded-xl bg-white border border-soil-100 self-start max-w-[85%] text-soil-800 leading-relaxed">
+          ${escapeHtml(data.answer)}
+        </div>
+      `;
+
+    } catch (error) {
+      document.getElementById(loadingId)?.remove();
+      chatLog.innerHTML += `
+        <div class="p-3 rounded-xl bg-red-50 border border-red-200 self-start max-w-[85%] text-red-600">
+          오류 발생: ${escapeHtml(error.message)}
+        </div>
+      `;
+    } finally {
+      sendBtn.disabled = false;
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+  }
+
+  // 간단한 HTML 특수문자 이스케이프 함수 (보안용)
+ function escapeHtml(text) {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/"/g, "&quot;")  // <-- 올바른 형태
+      .replace(/'/g, "&#039;");
+  }
+  </script>
+<!-- === 챗봇 섹션 끝 === -->
+</body>
+</html>
